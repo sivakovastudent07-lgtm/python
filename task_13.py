@@ -10,4 +10,5 @@ while guess != secret:
     elif guess > secret:
         print("Меньше")
     else:
-        print("Угадал! 🎉")
+
+        print("Угадал!")
