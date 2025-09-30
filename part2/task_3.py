@@ -9,11 +9,11 @@ def log_calls(filename):
             args_text = f"{a}, {b}"
             result = func(a, b)
 
-            log_line = f"[{current_time}] Функция '{func_name}' вызвана с аргументами: ({args_text}), результат: {result}"
+            log_line = f"[{current_time}] Функция '{func_name}' вызвана с аргументами: ({args_text}), результат: {result}\n"
 
             with open(filename, "a", encoding="utf-8") as f:
                 f.write(log_line)
 
             return result
-        return decorator
+        return wrapper  
     return decorator
