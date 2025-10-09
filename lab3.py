@@ -1,4 +1,5 @@
 from datetime import datetime
+
 class InsufficientFundsError(Exception):
     """недостаточно средств на счёте"""
 
@@ -11,13 +12,12 @@ class CurrencyMismatchError(Exception):
 class AccountAlreadyExistsError(Exception):
     """счёт в указанной валюте уже существует"""
 
-
 class ClientNotFoundError(Exception):
     """клиент не найден"""
-    
+
 next_client_id = 1
 next_account_id = 1    
-    
+
 class Client:
     def __init__(self, client_id, name, email):
         self.client_id = client_id
@@ -47,6 +47,23 @@ class Bank:
         return client_id
 
     def open_account(self, client_id, currency):
+        if client_id not in self.clients:
+            raise ClientNotFoundError("Клиент не найден")
+        client = self.clients[client_id]
+        currency = currency.upper()
+
+        if currency in client.accounts:
+            raise AccountAlreadyExistsError("Счёт в валюте " + currency + " уже существует")
+
+        global next_account_id
+        account_id = next_account_id
+        next_account_id += 1
+        account = BankAccount(account_id, client, currency)
+        client.accounts[currency] = account
+        self.accounts[account_id] = account
+        return account_id
+
+    def close_account(self, client_id, currency):
         if client_id not in self.clients:
             raise ClientNotFoundError("Клиент не найден")
         client = self.clients[client_id]
@@ -82,6 +99,7 @@ class Bank:
             'timestamp': datetime.now(),
             'balance_after': account.balance
         })
+
     def withdraw(self, client_id, currency, amount):
         if amount <= 0:
             raise ValueError("Сумма снятия должна быть положительной")
@@ -180,25 +198,25 @@ class Bank:
             for currency, account in client.accounts.items():
                 f.write("Счёт ID: " + str(account.account_id) + "\n")
                 f.write("Валюта: " + account.currency + "\n")
-                f.write("Баланс: " + "{:.2f}".format(account.balance) + " " + account.currency + "\n")
+                f.write("Баланс: " + "%.2f" % account.balance + " " + account.currency + "\n")
                 f.write("-" * 30 + "\n")
                 f.write("Транзакции:\n")
                 for tx in account.transactions:
                     tx_time = tx['timestamp'].strftime('%Y-%m-%d %H:%M:%S')
                     if tx['type'] == 'deposit':
-                        f.write("  " + tx_time + " | Пополнение | +" + "{:.2f}".format(tx['amount']) + " | Баланс: " + "{:.2f}".format(tx['balance_after']) + "\n")
+                        f.write("  " + tx_time + " | Пополнение | +" + "%.2f" % tx['amount'] + " | Баланс: " + "%.2f" % tx['balance_after'] + "\n")
                     elif tx['type'] == 'withdraw':
-                        f.write("  " + tx_time + " | Снятие | -" + "{:.2f}".format(tx['amount']) + " | Баланс: " + "{:.2f}".format(tx['balance_after']) + "\n")
+                        f.write("  " + tx_time + " | Снятие | -" + "%.2f" % tx['amount'] + " | Баланс: " + "%.2f" % tx['balance_after'] + "\n")
                     elif tx['type'] == 'transfer_out':
-                        f.write("  " + tx_time + " | Перевод исходящий | -" + "{:.2f}".format(tx['amount']) + " | Получатель: " + str(tx['to_account']) + " | Баланс: " + "{:.2f}".format(tx['balance_after']) + "\n")
+                        f.write("  " + tx_time + " | Перевод исходящий | -" + "%.2f" % tx['amount'] + " | Получатель: " + str(tx['to_account']) + " | Баланс: " + "%.2f" % tx['balance_after'] + "\n")
                     elif tx['type'] == 'transfer_in':
-                        f.write("  " + tx_time + " | Перевод входящий | +" + "{:.2f}".format(tx['amount']) + " | Отправитель: " + str(tx['from_account']) + " | Баланс: " + "{:.2f}".format(tx['balance_after']) + "\n")
+                        f.write("  " + tx_time + " | Перевод входящий | +" + "%.2f" % tx['amount'] + " | Отправитель: " + str(tx['from_account']) + " | Баланс: " + "%.2f" % tx['balance_after'] + "\n")
                 f.write("\n")
                 total_balance += account.balance
                 currencies.append(account.currency)
 
             f.write("=" * 50 + "\n")
-            f.write("Суммарный баланс: " + "{:.2f}".format(total_balance) + " (в валютах: " + ", ".join(currencies) + ")\n")
+            f.write("Суммарный баланс: " + "%.2f" % total_balance + " (в валютах: " + ", ".join(currencies) + ")\n")
 
         return filename
 
@@ -252,39 +270,39 @@ def main():
 
                     try:
                         if op == '1':
-                            currency = input("Введите валюту счёта (например, BYN, USD, EUR, RUB): ")
+                            currency = input("Введите валюту счёта (например, BYN, USD, EUR, RUB): ").upper()
                             account_id = bank.open_account(client_id, currency)
-                            print("Счёт в валюте " + currency.upper() + " успешно открыт! ID счёта: " + str(account_id))
+                            print("Счёт в валюте " + currency + " успешно открыт! ID счёта: " + str(account_id))
 
                         elif op == '2':
                             if not client.accounts:
                                 print("У вас нет счетов для закрытия")
                                 continue
-                            currency = input("Введите валюту счёта для закрытия: ")
+                            currency = input("Введите валюту счёта для закрытия: ").upper()
                             bank.close_account(client_id, currency)
-                            print("Счёт в валюте " + currency.upper() + " закрыт")
+                            print("Счёт в валюте " + currency + " закрыт")
 
                         elif op == '3':
-                            currency = input("Введите валюту счёта: ")
+                            currency = input("Введите валюту счёта: ").upper()
                             amount = float(input("Введите сумму для пополнения: "))
                             bank.deposit(client_id, currency, amount)
-                            print("Счёт пополнен на " + str(amount) + " " + currency.upper())
+                            print("Счёт пополнен на " + str(amount) + " " + currency)
 
                         elif op == '4':
-                            currency = input("Введите валюту счёта: ")
+                            currency = input("Введите валюту счёта: ").upper()
                             amount = float(input("Введите сумму для снятия: "))
                             bank.withdraw(client_id, currency, amount)
-                            print("Со счёта снято " + str(amount) + " " + currency.upper())
+                            print("Со счёта снято " + str(amount) + " " + currency)
 
                         elif op == '5':
                             to_id = int(input("Введите ID получателя: "))
                             if to_id == client_id:
                                 print("Нельзя перевести деньги самому себе")
                                 continue
-                            currency = input("Введите валюту перевода: ")
+                            currency = input("Введите валюту перевода: ").upper()
                             amount = float(input("Введите сумму перевода: "))
                             bank.transfer(client_id, currency, to_id, currency, amount)
-                            print("Перевод на " + str(amount) + " " + currency.upper() + " успешно выполнен!")
+                            print("Перевод на " + str(amount) + " " + currency + " успешно выполнен!")
 
                         elif op == '6':
                             filename = bank.generate_statement(client_id)
