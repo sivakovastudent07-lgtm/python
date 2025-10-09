@@ -15,6 +15,9 @@ class AccountAlreadyExistsError(Exception):
 class ClientNotFoundError(Exception):
     """клиент не найден"""
     
+next_client_id = 1
+next_account_id = 1    
+    
 class Client:
     def __init__(self, client_id, name, email):
         self.client_id = client_id
@@ -199,3 +202,115 @@ class Bank:
 
         return filename
 
+def main():
+    bank = Bank()
+    print("Добро пожаловать в банк!")
+
+    while True:
+        print()
+        print("ГЛАВНОЕ МЕНЮ")
+        print()
+        print("1. Создать нового клиента")
+        print("2. Войти по ID клиента")
+        print("3. Выйти из системы")
+        choice = input("Выберите действие (1–3): ")
+
+        if choice == '1':
+            name = input("Введите имя клиента: ")
+            email = input("Введите email клиента: ")
+            client_id = bank.create_client(name, email)
+            print("Клиент успешно создан!")
+            print("Ваш ID: " + str(client_id))
+
+        elif choice == '2':
+            try:
+                client_id = int(input("Введите ваш ID: "))
+                client = bank.get_client(client_id)
+                if client is None:
+                    print("Клиент с таким ID не найден")
+                    continue
+
+                while True:
+                    print("\nЛичный кабинет")
+                    print("Клиент: " + client.name + " (ID: " + str(client.client_id) + ")")
+                    print("Счета:")
+                    if client.accounts:
+                        for currency, account in client.accounts.items():
+                            print("  " + currency + ": " + "%.2f" % account.balance)
+                    else:
+                        print("У вас пока нет счетов")
+
+                    print("\nОперации:")
+                    print("1. Открыть счёт")
+                    print("2. Закрыть счёт")
+                    print("3. Пополнить счёт")
+                    print("4. Снять деньги")
+                    print("5. Перевести деньги другому клиенту")
+                    print("6. Получить выписку")
+                    print("7. Выйти в главное меню")
+                    op = input("Выберите операцию (1–7): ")
+
+                    try:
+                        if op == '1':
+                            currency = input("Введите валюту счёта (например, BYN, USD, EUR, RUB): ")
+                            account_id = bank.open_account(client_id, currency)
+                            print("Счёт в валюте " + currency.upper() + " успешно открыт! ID счёта: " + str(account_id))
+
+                        elif op == '2':
+                            if not client.accounts:
+                                print("У вас нет счетов для закрытия")
+                                continue
+                            currency = input("Введите валюту счёта для закрытия: ")
+                            bank.close_account(client_id, currency)
+                            print("Счёт в валюте " + currency.upper() + " закрыт")
+
+                        elif op == '3':
+                            currency = input("Введите валюту счёта: ")
+                            amount = float(input("Введите сумму для пополнения: "))
+                            bank.deposit(client_id, currency, amount)
+                            print("Счёт пополнен на " + str(amount) + " " + currency.upper())
+
+                        elif op == '4':
+                            currency = input("Введите валюту счёта: ")
+                            amount = float(input("Введите сумму для снятия: "))
+                            bank.withdraw(client_id, currency, amount)
+                            print("Со счёта снято " + str(amount) + " " + currency.upper())
+
+                        elif op == '5':
+                            to_id = int(input("Введите ID получателя: "))
+                            if to_id == client_id:
+                                print("Нельзя перевести деньги самому себе")
+                                continue
+                            currency = input("Введите валюту перевода: ")
+                            amount = float(input("Введите сумму перевода: "))
+                            bank.transfer(client_id, currency, to_id, currency, amount)
+                            print("Перевод на " + str(amount) + " " + currency.upper() + " успешно выполнен!")
+
+                        elif op == '6':
+                            filename = bank.generate_statement(client_id)
+                            print("Выписка сохранена в файл: " + filename)
+
+                        elif op == '7':
+                            break
+
+                        else:
+                            print("Неверный выбор. Попробуйте снова")
+
+                    except Exception as e:
+                        print("Ошибка: " + str(e))
+
+            except ValueError:
+                print("Ошибка: ID должен быть числом")
+            except Exception as e:
+                print("Ошибка: " + str(e))
+
+        elif choice == '3':
+            print("Спасибо за использование банковской системы! До свидания!")
+            break
+
+        else:
+            print("Неверный выбор. Пожалуйста, введите 1, 2 или 3")
+
+
+if __name__ == "__main__":
+    main()
