@@ -1,27 +1,25 @@
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches #для геометрических фигур
 
-fig, ax = plt.subplots(figsize=(8, 6))
-ax.set_xlim(0, 10)
-ax.set_ylim(0, 8)
-ax.set_aspect('equal')
-ax.axis('off')
+fig, ax = plt.subplots(figsize=(8, 2))
+
+#ТЕЛО
+for i in range(10):
+    ax.add_patch(plt.Circle((i * 0.6, 0), 0.25, color='green'))
 
 # ГОЛОВА
-head = patches.Circle((5, 4), radius=1.2)
-ax.add_patch(head)
-# ТЕЛО
-body_parts = [
-    patches.Ellipse((5, 2.5), width=1.5, height=1.0, angle=0, fill=False),
-    patches.Ellipse((5, 1.5), width=1.5, height=1.0, angle=0, fill=False),
-    patches.Ellipse((5, 0.5), width=1.5, height=1.0, angle=0, fill=False),
-]
+ax.add_patch(plt.Circle((10 * 0.6, 0), 0.3, color='green'))
 
-for part in body_parts:
-    ax.add_patch(part)
-# ХВОСТ
-tail = patches.Polygon([[5, 0.2], [5.2, 0.0], [4.8, 0.0]], fill=False)
-ax.add_patch(tail)
+# ГЛАЗА
+ax.add_patch(plt.Circle((10 * 0.6 + 0.1, 0.08), 0.05, color='white'))
+ax.add_patch(plt.Circle((10 * 0.6 + 0.1, -0.08), 0.05, color='white'))
+ax.add_patch(plt.Circle((10 * 0.6 + 0.12, 0.08), 0.02, color='black'))
+ax.add_patch(plt.Circle((10 * 0.6 + 0.12, -0.08), 0.02, color='black'))
 
+# ЯЗЫК
+ax.plot([10 * 0.6 + 0.3, 10 * 0.6 + 0.45], [0, 0], color='red', linewidth=2)
+ax.plot([10 * 0.6 + 0.45, 10 * 0.6 + 0.5], [0, 0.05], color='red', linewidth=2)
+ax.plot([10 * 0.6 + 0.45, 10 * 0.6 + 0.5], [0, -0.05], color='red', linewidth=2)
 
+ax.set_aspect('equal')
+ax.axis('off')
 plt.show()
