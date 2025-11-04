@@ -31,7 +31,7 @@ for x in nums:
             already = True
     if count > 1 and not already:
         dups = dups + [x]
-print("2. повторки:", dups if dups else "отсутствуют")
+print("2. повторяющиеся числа:", dups if dups else "отсутствуют")
 
 # 3
 even = []
