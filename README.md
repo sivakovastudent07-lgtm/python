@@ -1,2 +1,0 @@
-# python
-laby_python
